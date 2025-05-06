@@ -21,9 +21,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-  assets:
-    - assets/shaders/gradient.frag
-
-  # shaders:
-  #   - shaders/gradient.frag
