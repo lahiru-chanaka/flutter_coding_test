@@ -42,15 +42,19 @@ class UserProvider extends UserRepository with ChangeNotifier {
 
   User? get user => _user;
 
-  /// Fetches user data from the API.
+  /// Fetches the user profile with the given [userId] from the API.
   ///
-  /// This will update the provider's [status] to [UserStatus.loading] while the data is being fetched,
-  /// and then either [UserStatus.success] or [UserStatus.error] after the data has been fetched.
+  /// Sends a GET request to the endpoint `'/users/$userId'`.
+  /// If the request is successful (HTTP status code 200),
+  /// it returns a [User] object parsed from the JSON response.
+  /// If the request fails, it throws an [HttpException] with an error message
+  /// including the status code.
+  /// Any other errors during the operation will result in a general [Exception].
   ///
-  /// If the data is successfully fetched, the provider's [user] is updated with the fetched data.
-  /// If the data could not be fetched, the provider's [error] is updated with the error message.
-  ///
-  /// This method notifies its listeners at the start and end of the fetch operation.
+  /// The [userServiceState] stream is updated with one of the following states:
+  /// - [UserProfileLoading] when the request is in progress
+  /// - [UserProfileSuccess] when the request is successful
+  /// - [UserProfileError] when any error occurs during the request
   Future<void> fetchUser(String userId) async {
     _userProfileServiceStateController.add(UserProfileLoading());
     try {

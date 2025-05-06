@@ -3,6 +3,16 @@ import 'package:provider/provider.dart';
 import '../models/models.dart';
 import '../providers/providers.dart';
 
+/// The [UserProfileScreen] is a StatefulWidget that displays the user's profile
+/// information, such as name, email, phone, and website. It retrieves the data
+/// using a [UserProvider] service, which makes an API call to fetch the user data.
+/// The screen displays different states based on the result of the API call:
+/// - A loading spinner while the data is being fetched,
+/// - An error message if the fetch fails,
+/// - The user details when the data is successfully fetched.
+///
+/// The screen also includes a floating action button that allows the user to
+/// refresh the profile data by re-fetching the user information.
 class UserProfileScreen extends StatefulWidget {
   final String userId;
   const UserProfileScreen({super.key, required this.userId});
