@@ -25,14 +25,20 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     _searchController = TextEditingController();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SearchProvider>().resetState();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => context.read<SearchProvider>().resetState());
     super.initState();
+  }
+
+  /// Call this method when you're done with the widget to free up resources.
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final searchProvider = context.read<SearchProvider>();
     return Scaffold(
       appBar: AppBar(title: const Text('Product Search')),
       body: Padding(
@@ -49,14 +55,12 @@ class _SearchScreenState extends State<SearchScreen> {
                   borderSide: BorderSide.none,
                 ),
               ),
-              onChanged: (value) {
-                context.read<SearchProvider>().updateSearch(value);
-              },
+              onChanged: (value) => searchProvider.updateSearch(value),
             ),
             const SizedBox(height: 16),
             Expanded(
               child: StreamBuilder<SearchState>(
-                stream: context.read<SearchProvider>().searchResults,
+                stream: searchProvider.searchResults,
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: Text('Start typing to search'));
@@ -70,42 +74,38 @@ class _SearchScreenState extends State<SearchScreen> {
                       child: CircularProgressIndicator(),
                     ),
                     SearchSuccess(results: final results) => ListView.builder(
-                        itemCount: results.length,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text(results[index]),
-                            leading: const Icon(Icons.article),
-                            onTap: () {},
-                          );
-                        },
-                      ),
+                      itemCount: results.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          title: Text(results[index]),
+                          leading: const Icon(Icons.article),
+                          onTap: () {},
+                        );
+                      },
+                    ),
                     SearchError(message: final message) => Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.error_outline,
-                              color: Colors.red,
-                              size: 48,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Error: $message',
-                              style: const TextStyle(color: Colors.red),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () {
-                                if (_searchController.text.isNotEmpty) {
-                                  context.read<SearchProvider>().retrySearch();
-                                }
-                              },
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 48,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Error: $message',
+                            style: const TextStyle(color: Colors.red),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () => searchProvider.retrySearch(),
+                            child: const Text('Retry'),
+                          ),
+                        ],
                       ),
+                    ),
                     SearchEmpty() => const Center(
                       child: Text('No results found'),
                     ),
