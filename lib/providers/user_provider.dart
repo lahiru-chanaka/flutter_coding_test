@@ -1,21 +1,46 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../repositories/user_repository.dart';
 
-enum UserStatus { initial, loading, success, error }
+/// Represents the abstract base class for all user profile service states.
+sealed class UserProfileServiceState {}
 
-class UserProvider extends UserRepository with ChangeNotifier  {
-  
+/// State when user profile fetch has been initiated yet
+class UserProfileInitial extends UserProfileServiceState {}
+
+/// State when a user profile fetch is currently in progress
+class UserProfileLoading extends UserProfileServiceState {}
+
+/// State when success with user profile fetch
+class UserProfileSuccess extends UserProfileServiceState {
+  final User user;
+  UserProfileSuccess(this.user);
+}
+
+/// State when an error occurs during user profile fetch
+class UserProfileError extends UserProfileServiceState {
+  final String message;
+  UserProfileError(this.message);
+}
+
+class UserProvider extends UserRepository with ChangeNotifier {
+  /// A stream controller for managing the state of the user profile service.
+  final StreamController<UserProfileServiceState>
+  _userProfileServiceStateController =
+      StreamController<UserProfileServiceState>.broadcast();
+
+  /// Returns a stream of [UserProfileServiceState] objects representing the state of the user profile service.
+  Stream<UserProfileServiceState> get userServiceState =>
+      _userProfileServiceStateController.stream;
+
+  /// The service class for managing user profiles.
+  /// This class provides methods for retrieving and updating user profiles.
+  /// The [_userProfile] variable holds the current user's profile information.
   User? _user;
-  UserStatus _status = UserStatus.initial;
-  String? _error;
-
-  UserProvider();
 
   User? get user => _user;
-  UserStatus get status => _status;
-  String? get error => _error;
-  bool get isLoading => _status == UserStatus.loading;
 
   /// Fetches user data from the API.
   ///
@@ -27,18 +52,14 @@ class UserProvider extends UserRepository with ChangeNotifier  {
   ///
   /// This method notifies its listeners at the start and end of the fetch operation.
   Future<void> fetchUser(String userId) async {
-    _status = UserStatus.loading;
-    _error = null;
-    notifyListeners();
-
+    _userProfileServiceStateController.add(UserProfileLoading());
     try {
-      _user = await getUser(userId);
-      _status = UserStatus.success;
-    } catch (e) {
-      _error = e.toString();
-      _status = UserStatus.error;
+      final response = await getUser(userId);
+      _user = response;
+      _userProfileServiceStateController.add(UserProfileSuccess(response));
+    } on Exception catch (e) {
+      _userProfileServiceStateController.add(UserProfileError(e.toString()));
     }
-    
     notifyListeners();
   }
 }
